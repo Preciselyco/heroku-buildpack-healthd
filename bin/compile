@@ -1,0 +1,36 @@
+#!/bin/sh
+
+indent() {
+    sed 's/^/       /'
+}
+
+arrow() {
+    sed 's/^/-----> /'
+}
+
+BUILD_DIR=$1
+CACHE_DIR=$2
+ENV_DIR=$3
+WORKING_DIR=$(pwd)
+
+echo "Installing HealthD" | arrow
+
+go install github.com/gocraft/health/cmd/healthd
+
+if [ ! -d $BUILD_DIR/.profile.d ]; then
+    mkdir -p "$BUILD_DIR/.profile.d"
+fi
+
+cat > $BUILD_DIR/.profile.d/001-heroku-buildpack-healthd.sh << EOF
+#!/bin/sh
+
+pidfile=/tmp/healthd.pid
+
+# Start Telegraf from the \$HOME/bin directory with the configuration in /app/telegraf.conf (by default), redirect STDIN to /dev/null (but STDERR should still come through the logs)
+/sbin/start-stop-daemon --start --quiet --pidfile \$pidfile --exec HEALTHD_MONITORED_HOSTPORTS=127.0.0.1:5020 HEALTHD_SERVER_HOSTPORT=127.0.0.1:5030 healthd >/dev/null &
+
+EOF
+
+chmod +x $BUILD_DIR/.profile.d/001-heroku-buildpack-healthd.sh
+
+
