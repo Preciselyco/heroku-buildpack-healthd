@@ -15,8 +15,6 @@ WORKING_DIR=$(pwd)
 
 echo "Installing HealthD" | arrow
 
-/app/.heroku/go install github.com/gocraft/health/cmd/healthd
-
 if [ ! -d $BUILD_DIR/.profile.d ]; then
     mkdir -p "$BUILD_DIR/.profile.d"
 fi
