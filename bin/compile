@@ -12,8 +12,14 @@ BUILD_DIR=$1
 CACHE_DIR=$2
 ENV_DIR=$3
 WORKING_DIR=$(pwd)
+BP_DIR=$(cd $(dirname ${0:-}); cd ..; pwd)
 
 echo "Installing HealthD" | arrow
+
+mkdir -p $BUILD_DIR/bin
+cp bin/healthd $BUILD_DIR/bin/healthd
+
+echo `ls $BUILD_DIR/bin/` | arrow
 
 if [ ! -d $BUILD_DIR/.profile.d ]; then
     mkdir -p "$BUILD_DIR/.profile.d"
@@ -25,10 +31,10 @@ cat > $BUILD_DIR/.profile.d/001-heroku-buildpack-healthd.sh << EOF
 pidfile=/tmp/healthd.pid
 
 # Start HealthD redirect STDIN to /dev/null (but STDERR should still come through the logs)
-export HEALTHD_MONITORED_HOSTPORTS=127.0.0.1:5020
+export HEALTHD_MONITORED_HOSTPORTS=:$PORT
 export HEALTHD_SERVER_HOSTPORT=127.0.0.1:5030
 
-/sbin/start-stop-daemon --start --quiet --pidfile \$pidfile --exec healthd >/dev/null &
+/sbin/start-stop-daemon --start --quiet --pidfile \$pidfile --exec /app/bin/healthd >/dev/null &
 
 EOF
 
